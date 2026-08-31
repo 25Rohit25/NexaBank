@@ -7,6 +7,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import com.nexabank.account.exception.BusinessRuleException;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -67,5 +68,28 @@ public class Account {
     public String getCurrency() { return currency; }
     public AccountStatus getStatus() { return status; }
     public Instant getCreatedAt() { return createdAt; }
-}
 
+    public void deposit(BigDecimal amount) {
+        requireActive();
+        balance = balance.add(amount);
+    }
+
+    public void debit(BigDecimal amount) {
+        requireActive();
+        if (balance.compareTo(amount) < 0) {
+            throw new BusinessRuleException("Insufficient funds");
+        }
+        balance = balance.subtract(amount);
+    }
+
+    public void credit(BigDecimal amount) {
+        requireActive();
+        balance = balance.add(amount);
+    }
+
+    private void requireActive() {
+        if (status != AccountStatus.ACTIVE) {
+            throw new BusinessRuleException("Account is not active");
+        }
+    }
+}

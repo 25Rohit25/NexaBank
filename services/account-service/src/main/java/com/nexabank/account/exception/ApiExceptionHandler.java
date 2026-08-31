@@ -23,6 +23,16 @@ public class ApiExceptionHandler {
         return problem(HttpStatus.CONFLICT, "Conflict", exception.getMessage());
     }
 
+    @ExceptionHandler(BusinessRuleException.class)
+    ProblemDetail businessRule(BusinessRuleException exception) {
+        return problem(HttpStatus.UNPROCESSABLE_ENTITY, "Business rule rejected", exception.getMessage());
+    }
+
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    ProblemDetail accessDenied(org.springframework.security.access.AccessDeniedException exception) {
+        return problem(HttpStatus.FORBIDDEN, "Access denied", exception.getMessage());
+    }
+
     @ExceptionHandler(CustomerValidationException.class)
     ProblemDetail customerValidation(CustomerValidationException exception) {
         return problem(exception.getStatus(), "Customer validation failed", exception.getMessage());
@@ -45,4 +55,3 @@ public class ApiExceptionHandler {
         return problem;
     }
 }
-
