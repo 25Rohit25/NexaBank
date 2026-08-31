@@ -1,0 +1,24 @@
+server:
+  port: ${AGENT_SERVICE_PORT:8091}
+
+spring:
+  application:
+    name: agent-service
+  ai:
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      chat:
+        model: ${OLLAMA_CHAT_MODEL:qwen3:8b}
+      init:
+        pull-model-strategy: never
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:nexa-local-development-secret-change-me}
+    issuer: nexa-bank
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
