@@ -1,0 +1,33 @@
+server:
+  port: ${BANKING_MCP_PORT:8090}
+
+spring:
+  application:
+    name: banking-mcp-server
+  ai:
+    mcp:
+      server:
+        name: nexa-banking-tools
+        version: 0.1.0
+        protocol: STREAMABLE
+        type: SYNC
+        instructions: Authenticated tools for Nexa Bank deterministic APIs.
+        capabilities:
+          resource: false
+          prompt: false
+          completion: false
+          tool: true
+
+banking:
+  gateway-url: ${BANKING_GATEWAY_URL:http://localhost:8080}
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:nexa-local-development-secret-change-me}
+    issuer: nexa-bank
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
