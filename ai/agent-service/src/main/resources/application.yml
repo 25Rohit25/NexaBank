@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: agent-service
+  datasource:
+    url: ${RAG_DB_URL:jdbc:postgresql://localhost:5432/nexa_rag}
+    username: ${POSTGRES_USER:nexa}
+    password: ${POSTGRES_PASSWORD:nexa-local-only}
   ai:
     mcp:
       client:
@@ -12,8 +16,17 @@ spring:
       base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
       chat:
         model: ${OLLAMA_CHAT_MODEL:qwen3:8b}
+      embedding:
+        model: ${OLLAMA_EMBEDDING_MODEL:mxbai-embed-large}
       init:
         pull-model-strategy: never
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        schema-validation: true
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        table-name: policy_vector_store
 
 security:
   jwt:
@@ -22,6 +35,10 @@ security:
 
 banking:
   mcp-url: ${BANKING_MCP_URL:http://localhost:8090}
+
+nexa:
+  rag:
+    ingest-on-startup: ${RAG_INGEST_ON_STARTUP:false}
 
 management:
   endpoints:
