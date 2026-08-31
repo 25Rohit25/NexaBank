@@ -1,32 +1,21 @@
-# Nexa Bank foundation architecture
-
-This first delivery deliberately stops at the banking foundation.
+# Nexa Bank deterministic backend architecture
 
 ```text
-Client
-  │
-  ├── register/login ──> Customer Service (8081) ──> nexa_customer
-  │                         │
-  │                         └── signs JWT (sub = customer ID)
-  │
-  └── Bearer JWT ─────> Account Service (8082) ───> nexa_account
-                            │
-                            └── validates customer over HTTP
-                                      │
-                                      └── Customer Service
-
-Local infrastructure: PostgreSQL + Redis + Kafka
+Client -> API Gateway (8080)
+             |-- Customer Service (8081) -> nexa_customer
+             |-- Account Service (8082)  -> nexa_account + Redis
+             |-- Transaction Service (8083) -> nexa_transaction
+                                              ^
+Account outbox -> Kafka ----------------------|-- Notification Service -> structured logs
+                                              `-- Audit Service -> nexa_audit
 ```
 
-## Trust boundaries
+Account Service owns balances and performs source debit, destination credit, two immutable ledger inserts, idempotency persistence, and outbox insertion in one PostgreSQL transaction. Accounts are locked in stable ID order to avoid deadlocks. A scheduled publisher sends committed outbox events to Kafka and marks them published only after broker acknowledgement.
 
-- Customer identity comes from the verified JWT `sub` claim, not request JSON.
-- Account Service has no access to the customer schema. It forwards the bearer token to Customer Service when validating account creation.
-- Customer and account reads enforce owner-or-admin authorization.
-- Passwords are BCrypt hashes. JWT secrets are supplied through environment variables outside local development.
-- Balance is `BigDecimal`/`NUMERIC(19,2)` and starts at zero; money movement is intentionally deferred to the transaction phase.
+Transaction Service is a read projection, not the balance authority. Its consumers use transaction/event IDs as primary keys, making Kafka redelivery idempotent. Notification Service initially writes structured logs. Audit Service stores actor, action, resource, status, time, and correlation ID without tokens, passwords, or other secrets.
 
-## Deliberately deferred
+The gateway contains no banking rules. It validates JWT issuer/signature, permits public auth endpoints, routes downstream requests, preserves bearer tokens, and propagates `X-Correlation-ID`.
 
-Transfers, deposits, Redis use cases, Kafka events, gateway, MCP, agent, RAG, frontend, observability, and Kubernetes belong to later phases.
+## Remaining phases
 
+MCP tools, AI agent workflows, RAG/pgvector, frontend, service container images, observability, and Kubernetes are intentionally deferred until this backend passes live end-to-end verification.
