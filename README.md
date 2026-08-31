@@ -10,6 +10,7 @@ Nexa Bank is being built backend-first. The deterministic banking backend is now
 - PostgreSQL 17 with pgvector available for a later RAG phase
 - Redis 8 and Kafka 4
 - Spring Cloud Gateway MVC 5.0.3
+- Spring AI 2.0.1 with Ollama and MCP
 
 ## Repository
 
@@ -21,6 +22,7 @@ services/notification-service Structured transfer notification logs
 services/audit-service     Durable banking event audit records
 services/api-gateway       JWT validation, routing, correlation IDs
 mcp/banking-mcp-server     Secured Streamable HTTP banking tools
+ai/agent-service           JWT-scoped ChatClient and authenticated MCP client
 infrastructure/docker      Local database initialization
 docs                       Architecture and API contract
 ```
@@ -62,7 +64,10 @@ Install JDK 21, Maven, Git, and Docker Desktop. On Windows, verify them with:
    mvn -pl services/audit-service spring-boot:run
    mvn -pl services/api-gateway spring-boot:run
    mvn -pl mcp/banking-mcp-server spring-boot:run
+   mvn -pl ai/agent-service spring-boot:run
    ```
+
+   The agent defaults to Ollama at `http://localhost:11434` with `qwen3:8b`. Override `OLLAMA_BASE_URL` or `OLLAMA_CHAT_MODEL` in the environment when using a different local model.
 
 4. Verify gateway health:
 
@@ -101,4 +106,4 @@ curl.exe -s http://localhost:8080/api/v1/accounts/$($account.accountId)/balance 
 mvn clean verify
 ```
 
-The project targets Java 21. The secured MCP tool layer is implemented. Agent/LLM integration, RAG, frontend, container images, observability, and Kubernetes remain later phases.
+The project targets Java 21. The secured MCP tool layer and the first authenticated agent workflow are implemented. Live agent verification requires the banking stack and Ollama. RAG, frontend, container images, observability, and Kubernetes remain later phases.
