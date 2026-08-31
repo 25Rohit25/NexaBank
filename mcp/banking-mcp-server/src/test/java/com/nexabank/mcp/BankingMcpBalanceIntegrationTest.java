@@ -4,6 +4,8 @@ import com.nexabank.mcp.client.BankingApiClient;
 import com.nexabank.mcp.dto.AccountView;
 import com.nexabank.mcp.dto.BalanceView;
 import com.nexabank.mcp.dto.TransactionView;
+import com.nexabank.mcp.dto.TransferResult;
+import com.nexabank.mcp.service.TransferConfirmationStore;
 import io.modelcontextprotocol.client.McpClient;
 import io.modelcontextprotocol.client.McpSyncClient;
 import io.modelcontextprotocol.client.transport.HttpClientStreamableHttpTransport;
@@ -27,7 +29,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class BankingMcpBalanceIntegrationTest {
@@ -39,6 +43,9 @@ class BankingMcpBalanceIntegrationTest {
 
     @MockitoBean(reset = MockReset.NONE)
     private JwtDecoder jwtDecoder;
+
+    @MockitoBean
+    private TransferConfirmationStore confirmations;
 
     @BeforeEach
     void configureAuthenticatedCustomer() {
@@ -134,5 +141,63 @@ class BankingMcpBalanceIntegrationTest {
         verify(bankingApi).getTransactions(eq("ACC-1001"), eq(from), eq(to),
                 minimumCaptor.capture(), eq("signed-token"));
         assertThat(minimumCaptor.getValue()).isEqualByComparingTo(minimum);
+    }
+
+    @Test
+    void preparesWithoutMovingMoneyAndExecutesOnlyWithTheConfirmationToken() {
+        AccountView savings = new AccountView("ACC-S", "CUS-1001", "XXXX1001", "SAVINGS",
+                new BigDecimal("1000.00"), "INR", "ACTIVE", Instant.parse("2026-01-01T00:00:00Z"));
+        AccountView current = new AccountView("ACC-C", "CUS-1001", "XXXX2001", "CURRENT",
+                new BigDecimal("200.00"), "INR", "ACTIVE", Instant.parse("2026-01-02T00:00:00Z"));
+        BigDecimal amount = new BigDecimal("250.00");
+        Instant expiry = Instant.parse("2026-09-01T00:30:00Z");
+        var pending = new TransferConfirmationStore.PendingTransfer(
+                "confirm-1", "CUS-1001", "ACC-S", "ACC-C", amount, expiry);
+        when(bankingApi.getCustomerAccounts("CUS-1001", "signed-token"))
+                .thenReturn(List.of(savings, current));
+        when(confirmations.create("CUS-1001", "ACC-S", "ACC-C", amount)).thenReturn(pending);
+
+        HttpClientStreamableHttpTransport transport = HttpClientStreamableHttpTransport
+                .builder("http://localhost:" + port)
+                .endpoint("/mcp")
+                .httpRequestCustomizer((request, method, endpoint, body, context) ->
+                        request.header("Authorization", "Bearer signed-token"))
+                .build();
+
+        try (McpSyncClient client = McpClient.sync(transport).build()) {
+            client.initialize();
+            McpSchema.CallToolResult preview = client.callTool(McpSchema.CallToolRequest
+                    .builder("prepareTransfer")
+                    .arguments(Map.of(
+                            "sourceAccountId", "ACC-S",
+                            "destinationAccountId", "ACC-C",
+                            "amount", amount))
+                    .build());
+
+            assertThat(preview.isError()).isNotEqualTo(true);
+            assertThat(preview.content().toString())
+                    .contains("confirm-1", "250.00", "750.00", "Ask the user to confirm");
+            verify(bankingApi, never()).executeTransfer(
+                    anyString(), anyString(), any(BigDecimal.class), anyString(), anyString());
+
+            when(confirmations.require("confirm-1", "CUS-1001")).thenReturn(pending);
+            TransferResult completed = new TransferResult(
+                    "TRF-1", "TXN-D", "TXN-C", "ACC-S", "ACC-C", amount,
+                    "INR", "COMPLETED", Instant.parse("2026-09-01T00:25:00Z"));
+            when(bankingApi.executeTransfer("ACC-S", "ACC-C", amount,
+                    "confirm-1", "signed-token")).thenReturn(completed);
+
+            McpSchema.CallToolResult result = client.callTool(McpSchema.CallToolRequest
+                    .builder("executeTransfer")
+                    .arguments(Map.of("confirmationToken", "confirm-1"))
+                    .build());
+
+            assertThat(result.isError()).isNotEqualTo(true);
+            assertThat(result.content().toString()).contains("TRF-1", "COMPLETED", "250.00");
+        }
+
+        verify(bankingApi).executeTransfer(
+                "ACC-S", "ACC-C", amount, "confirm-1", "signed-token");
+        verify(confirmations).complete("confirm-1");
     }
 }
