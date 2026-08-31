@@ -23,6 +23,7 @@
         <module>services/account-service</module>
         <module>services/transaction-service</module>
         <module>services/notification-service</module>
+        <module>services/audit-service</module>
     </modules>
 
     <properties>
