@@ -186,6 +186,8 @@ class BankingMcpBalanceIntegrationTest {
                     "INR", "COMPLETED", Instant.parse("2026-09-01T00:25:00Z"));
             when(bankingApi.executeTransfer("ACC-S", "ACC-C", amount,
                     "confirm-1", "signed-token")).thenReturn(completed);
+            when(bankingApi.getAccountBalance("ACC-S", "signed-token"))
+                    .thenReturn(new BalanceView("ACC-S", new BigDecimal("750.00"), "INR"));
 
             McpSchema.CallToolResult result = client.callTool(McpSchema.CallToolRequest
                     .builder("executeTransfer")
@@ -194,10 +196,18 @@ class BankingMcpBalanceIntegrationTest {
 
             assertThat(result.isError()).isNotEqualTo(true);
             assertThat(result.content().toString()).contains("TRF-1", "COMPLETED", "250.00");
+
+            McpSchema.CallToolResult remainingBalance = client.callTool(McpSchema.CallToolRequest
+                    .builder("getAccountBalance")
+                    .arguments(Map.of("accountId", "ACC-S"))
+                    .build());
+            assertThat(remainingBalance.isError()).isNotEqualTo(true);
+            assertThat(remainingBalance.content().toString()).contains("750.00", "INR");
         }
 
         verify(bankingApi).executeTransfer(
                 "ACC-S", "ACC-C", amount, "confirm-1", "signed-token");
         verify(confirmations).complete("confirm-1");
+        verify(bankingApi).getAccountBalance("ACC-S", "signed-token");
     }
 }
