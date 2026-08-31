@@ -3,17 +3,20 @@ package com.nexabank.mcp;
 import com.nexabank.mcp.client.BankingApiClient;
 import com.nexabank.mcp.dto.AccountView;
 import com.nexabank.mcp.dto.BalanceView;
+import com.nexabank.mcp.dto.TransactionView;
 import io.modelcontextprotocol.client.McpClient;
 import io.modelcontextprotocol.client.McpSyncClient;
 import io.modelcontextprotocol.client.transport.HttpClientStreamableHttpTransport;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.test.context.bean.override.mockito.MockReset;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -23,6 +26,8 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class BankingMcpBalanceIntegrationTest {
@@ -32,18 +37,18 @@ class BankingMcpBalanceIntegrationTest {
     @MockitoBean
     private BankingApiClient bankingApi;
 
-    @MockitoBean
+    @MockitoBean(reset = MockReset.NONE)
     private JwtDecoder jwtDecoder;
 
-    @Autowired
-    void configureAuthenticatedCustomer(JwtDecoder decoder) {
+    @BeforeEach
+    void configureAuthenticatedCustomer() {
         Jwt jwt = Jwt.withTokenValue("signed-token")
                 .header("alg", "HS256")
                 .subject("CUS-1001")
                 .issuedAt(Instant.now())
                 .expiresAt(Instant.now().plusSeconds(300))
                 .build();
-        when(decoder.decode("signed-token")).thenReturn(jwt);
+        when(jwtDecoder.decode("signed-token")).thenReturn(jwt);
     }
 
     @Test
@@ -83,5 +88,51 @@ class BankingMcpBalanceIntegrationTest {
 
         verify(bankingApi).getCustomerAccounts("CUS-1001", "signed-token");
         verify(bankingApi).getAccountBalance("ACC-1001", "signed-token");
+    }
+
+    @Test
+    void retrievesTransactionsAboveTheRequestedAmountAndWithinTheDateRange() {
+        String from = "2026-09-01T00:00:00Z";
+        String to = "2026-09-30T23:59:59Z";
+        BigDecimal minimum = new BigDecimal("5000.00");
+        TransactionView transaction = new TransactionView(
+                "TXN-9001", "TRF-7001", "ACC-1001", "ACC-2001", "TRANSFER_OUT",
+                new BigDecimal("6250.00"), "INR", "COMPLETED",
+                Instant.parse("2026-09-10T10:15:30Z"), "REQ-9001");
+        when(bankingApi.getTransactions(eq("ACC-1001"), eq(from), eq(to),
+                any(BigDecimal.class), eq("signed-token")))
+                .thenReturn(List.of(transaction));
+
+        HttpClientStreamableHttpTransport transport = HttpClientStreamableHttpTransport
+                .builder("http://localhost:" + port)
+                .endpoint("/mcp")
+                .httpRequestCustomizer((request, method, endpoint, body, context) ->
+                        request.header("Authorization", "Bearer signed-token"))
+                .build();
+
+        try (McpSyncClient client = McpClient.sync(transport).build()) {
+            client.initialize();
+            assertThat(client.listTools().tools())
+                    .extracting(McpSchema.Tool::name)
+                    .contains("getTransactions");
+
+            McpSchema.CallToolResult result = client.callTool(McpSchema.CallToolRequest
+                    .builder("getTransactions")
+                    .arguments(Map.of(
+                            "accountId", "ACC-1001",
+                            "from", from,
+                            "to", to,
+                            "minAmount", minimum))
+                    .build());
+
+            assertThat(result.isError()).isNotEqualTo(true);
+            assertThat(result.content().toString())
+                    .contains("TXN-9001", "6250.00", "INR", "TRANSFER_OUT");
+        }
+
+        ArgumentCaptor<BigDecimal> minimumCaptor = ArgumentCaptor.forClass(BigDecimal.class);
+        verify(bankingApi).getTransactions(eq("ACC-1001"), eq(from), eq(to),
+                minimumCaptor.capture(), eq("signed-token"));
+        assertThat(minimumCaptor.getValue()).isEqualByComparingTo(minimum);
     }
 }
