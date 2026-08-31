@@ -43,5 +43,6 @@ public class OutboxEvent {
     public String getAggregateId() { return aggregateId; }
     public String getEventType() { return eventType; }
     public String getPayload() { return payload; }
+    public Instant getPublishedAt() { return publishedAt; }
     public void markPublished(Instant at) { this.publishedAt = at; }
 }
