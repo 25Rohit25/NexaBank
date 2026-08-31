@@ -18,7 +18,8 @@ class AgentControllerTest {
     @Test
     void passesVerifiedJwtSubjectToTheAgentService() {
         AgentChatService service = mock(AgentChatService.class);
-        when(service.chat("CUS-1001", "What is my balance?")).thenReturn("Your balance is available.");
+        when(service.chat("CUS-1001", "signed-token", "What is my balance?"))
+                .thenReturn("Your balance is available.");
         AgentController controller = new AgentController(service);
         Jwt jwt = Jwt.withTokenValue("signed-token")
                 .header("alg", "HS256")
@@ -31,6 +32,6 @@ class AgentControllerTest {
                 new ChatRequest("What is my balance?"), new JwtAuthenticationToken(jwt));
 
         assertThat(response.message()).isEqualTo("Your balance is available.");
-        verify(service).chat("CUS-1001", "What is my balance?");
+        verify(service).chat("CUS-1001", "signed-token", "What is my balance?");
     }
 }

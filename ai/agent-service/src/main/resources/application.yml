@@ -5,6 +5,9 @@ spring:
   application:
     name: agent-service
   ai:
+    mcp:
+      client:
+        enabled: false
     ollama:
       base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
       chat:
@@ -16,6 +19,9 @@ security:
   jwt:
     secret: ${JWT_SECRET:nexa-local-development-secret-change-me}
     issuer: nexa-bank
+
+banking:
+  mcp-url: ${BANKING_MCP_URL:http://localhost:8090}
 
 management:
   endpoints:

@@ -21,6 +21,9 @@ public class AgentController {
 
     @PostMapping("/chat")
     ChatResponse chat(@Valid @RequestBody ChatRequest request, JwtAuthenticationToken authentication) {
-        return new ChatResponse(agentChatService.chat(authentication.getToken().getSubject(), request.message()));
+        return new ChatResponse(agentChatService.chat(
+                authentication.getToken().getSubject(),
+                authentication.getToken().getTokenValue(),
+                request.message()));
     }
 }
