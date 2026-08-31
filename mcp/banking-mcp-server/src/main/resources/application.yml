@@ -17,9 +17,14 @@ spring:
           prompt: false
           completion: false
           tool: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
 banking:
   gateway-url: ${BANKING_GATEWAY_URL:http://localhost:8080}
+  transfer-confirmation-ttl: ${TRANSFER_CONFIRMATION_TTL:5m}
 
 security:
   jwt:

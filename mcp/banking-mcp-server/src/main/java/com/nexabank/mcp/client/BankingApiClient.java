@@ -3,6 +3,7 @@ package com.nexabank.mcp.client;
 import com.nexabank.mcp.dto.AccountView;
 import com.nexabank.mcp.dto.BalanceView;
 import com.nexabank.mcp.dto.TransactionView;
+import com.nexabank.mcp.dto.TransferResult;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
@@ -48,7 +49,19 @@ public class BankingApiClient {
         return result == null ? List.of() : result;
     }
 
+    public TransferResult executeTransfer(String sourceAccountId, String destinationAccountId,
+                                          BigDecimal amount, String confirmationToken, String token) {
+        return restClient.post().uri("/api/v1/transfers")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .header("Idempotency-Key", confirmationToken)
+                .body(new TransferRequest(sourceAccountId, destinationAccountId, amount))
+                .retrieve().body(TransferResult.class);
+    }
+
     private String encode(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
+    }
+
+    private record TransferRequest(String sourceAccountId, String destinationAccountId, BigDecimal amount) {
     }
 }
