@@ -39,6 +39,8 @@ banking:
 nexa:
   rag:
     ingest-on-startup: ${RAG_INGEST_ON_STARTUP:false}
+    top-k: ${RAG_TOP_K:4}
+    similarity-threshold: ${RAG_SIMILARITY_THRESHOLD:0.72}
 
 management:
   endpoints:

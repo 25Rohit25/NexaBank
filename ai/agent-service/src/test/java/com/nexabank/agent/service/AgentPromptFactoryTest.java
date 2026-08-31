@@ -15,7 +15,9 @@ class AgentPromptFactoryTest {
                 .contains("CUS-1001")
                 .contains("only authority")
                 .contains("explicitly confirmed")
-                .contains("Never invent banking data");
+                .contains("Never invent banking data")
+                .contains("only retrieved bank_policy evidence")
+                .contains("I couldn't find this information in the available banking policies");
     }
 
     @Test
