@@ -3,6 +3,7 @@
 *.iml
 .env
 .m2/
+.m2-cache/
 target/
 **/target/
 *.log
