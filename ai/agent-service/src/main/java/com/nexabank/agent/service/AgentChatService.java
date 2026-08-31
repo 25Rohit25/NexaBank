@@ -3,6 +3,8 @@ package com.nexabank.agent.service;
 import com.nexabank.agent.mcp.AuthenticatedMcpClientFactory;
 import com.nexabank.agent.mcp.AuthenticatedMcpSession;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -11,9 +13,12 @@ public class AgentChatService {
     private final AgentPromptFactory promptFactory;
     private final AuthenticatedMcpClientFactory mcpClientFactory;
 
-    public AgentChatService(ChatClient.Builder chatClientBuilder, AgentPromptFactory promptFactory,
+    public AgentChatService(ChatClient.Builder chatClientBuilder, ChatMemory chatMemory,
+                            AgentPromptFactory promptFactory,
                             AuthenticatedMcpClientFactory mcpClientFactory) {
-        this.chatClient = chatClientBuilder.build();
+        this.chatClient = chatClientBuilder
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .build();
         this.promptFactory = promptFactory;
         this.mcpClientFactory = mcpClientFactory;
     }
@@ -24,6 +29,9 @@ public class AgentChatService {
                     .system(promptFactory.systemPrompt(customerId))
                     .user(message)
                     .tools(mcp.tools())
+                    .advisors(advisor -> advisor.param(
+                            ChatMemory.CONVERSATION_ID,
+                            promptFactory.conversationId(customerId)))
                     .call()
                     .content();
         }

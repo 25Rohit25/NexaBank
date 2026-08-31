@@ -4,6 +4,10 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class AgentPromptFactory {
+    String conversationId(String customerId) {
+        return "nexa-customer:" + customerId;
+    }
+
     String systemPrompt(String customerId) {
         return """
                 You are Nexa Bank's authenticated banking assistant.

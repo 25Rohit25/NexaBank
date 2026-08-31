@@ -17,4 +17,10 @@ class AgentPromptFactoryTest {
                 .contains("explicitly confirmed")
                 .contains("Never invent banking data");
     }
+
+    @Test
+    void scopesConversationMemoryToTheAuthenticatedCustomer() {
+        assertThat(promptFactory.conversationId("CUS-1001"))
+                .isEqualTo("nexa-customer:CUS-1001");
+    }
 }
