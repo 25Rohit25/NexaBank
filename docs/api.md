@@ -18,7 +18,10 @@ All JSON endpoints use `/api/v1` and are exposed through the gateway at port 808
 | POST | `/api/v1/transfers` | Source owner/Admin | Atomically transfer funds between accounts |
 | GET | `/api/v1/transactions/{id}` | Owner/Admin | Get a projected transaction |
 | GET | `/api/v1/transactions/account/{accountId}` | Owner/Admin | List history; optional `from`, `to`, `minAmount` |
+| POST | `/api/v1/agent/chat` | Customer/Admin | Send an authenticated message to the AI agent |
 
 Registration requires a password of 12–72 characters. Phone numbers accept an optional leading `+` and 8–15 digits. Accounts support `SAVINGS` and `CURRENT`; currency is a three-letter uppercase code such as `INR`.
 
 Deposit body: `{"amount":1000.00}`. Transfer body: `{"sourceAccountId":"...","destinationAccountId":"...","amount":25.00}`. Reusing an idempotency key with the same request replays its response; reuse with different request data returns `409 Conflict`.
+
+Agent chat body: `{"message":"What is my balance?"}`. The message is required and limited to 2,000 characters. The agent identity always comes from the verified JWT subject; the client cannot supply a customer ID. Banking answers require MCP tools, which are wired in the next agent increment.

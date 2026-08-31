@@ -21,6 +21,10 @@ spring:
               uri: ${TRANSACTION_SERVICE_URL:http://localhost:8083}
               predicates:
                 - Path=/api/v1/transactions/**
+            - id: agent-service
+              uri: ${AGENT_SERVICE_URL:http://localhost:8091}
+              predicates:
+                - Path=/api/v1/agent/**
             - id: banking-mcp-server
               uri: ${BANKING_MCP_URL:http://localhost:8090}
               predicates:
