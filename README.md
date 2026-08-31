@@ -20,6 +20,7 @@ services/transaction-service  Kafka-backed transaction history projection
 services/notification-service Structured transfer notification logs
 services/audit-service     Durable banking event audit records
 services/api-gateway       JWT validation, routing, correlation IDs
+mcp/banking-mcp-server     Secured Streamable HTTP banking tools
 infrastructure/docker      Local database initialization
 docs                       Architecture and API contract
 ```
@@ -60,6 +61,7 @@ Install JDK 21, Maven, Git, and Docker Desktop. On Windows, verify them with:
    mvn -pl services/notification-service spring-boot:run
    mvn -pl services/audit-service spring-boot:run
    mvn -pl services/api-gateway spring-boot:run
+   mvn -pl mcp/banking-mcp-server spring-boot:run
    ```
 
 4. Verify gateway health:
@@ -99,4 +101,4 @@ curl.exe -s http://localhost:8080/api/v1/accounts/$($account.accountId)/balance 
 mvn clean verify
 ```
 
-The project targets Java 21. AI, MCP, RAG, frontend, container images, observability, and Kubernetes remain later phases.
+The project targets Java 21. The secured MCP tool layer is implemented. Agent/LLM integration, RAG, frontend, container images, observability, and Kubernetes remain later phases.
