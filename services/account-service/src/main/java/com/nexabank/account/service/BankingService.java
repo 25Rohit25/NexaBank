@@ -39,15 +39,18 @@ public class BankingService {
     private final IdempotencyRecordRepository idempotencyRecords;
     private final OutboxEventRepository outboxEvents;
     private final ObjectMapper objectMapper;
+    private final IdempotencyCache idempotencyCache;
 
     public BankingService(AccountRepository accounts, LedgerEntryRepository ledgerEntries,
                           IdempotencyRecordRepository idempotencyRecords,
-                          OutboxEventRepository outboxEvents, ObjectMapper objectMapper) {
+                          OutboxEventRepository outboxEvents, ObjectMapper objectMapper,
+                          IdempotencyCache idempotencyCache) {
         this.accounts = accounts;
         this.ledgerEntries = ledgerEntries;
         this.idempotencyRecords = idempotencyRecords;
         this.outboxEvents = outboxEvents;
         this.objectMapper = objectMapper;
+        this.idempotencyCache = idempotencyCache;
     }
 
     @Transactional
@@ -150,22 +153,37 @@ public class BankingService {
     }
 
     private <T> T replay(String actorId, String key, String requestHash, String operation, Class<T> type) {
+        IdempotencyCache.CacheEntry cached = idempotencyCache.get(actorId, key);
+        if (cached != null) {
+            return deserializeReplay(cached.requestHash(), cached.operationType(), cached.responseJson(),
+                    requestHash, operation, type);
+        }
         return idempotencyRecords.findByActorIdAndIdempotencyKey(actorId, key).map(record -> {
-            if (!record.getRequestHash().equals(requestHash) || !record.getOperationType().equals(operation)) {
-                throw new ConflictException("Idempotency-Key was already used for a different request");
-            }
-            try {
-                return objectMapper.readValue(record.getResponseJson(), type);
-            } catch (Exception exception) {
-                throw new IllegalStateException("Stored idempotency response is invalid", exception);
-            }
+            idempotencyCache.putAfterCommit(actorId, key, record.getRequestHash(),
+                    record.getOperationType(), record.getResponseJson());
+            return deserializeReplay(record.getRequestHash(), record.getOperationType(), record.getResponseJson(),
+                    requestHash, operation, type);
         }).orElse(null);
+    }
+
+    private <T> T deserializeReplay(String storedHash, String storedOperation, String responseJson,
+                                    String requestHash, String operation, Class<T> type) {
+        if (!storedHash.equals(requestHash) || !storedOperation.equals(operation)) {
+            throw new ConflictException("Idempotency-Key was already used for a different request");
+        }
+        try {
+            return objectMapper.readValue(responseJson, type);
+        } catch (Exception exception) {
+            throw new IllegalStateException("Stored idempotency response is invalid", exception);
+        }
     }
 
     private void persistResult(String actorId, String key, String requestHash, String operation, Object response) {
         try {
+            String responseJson = objectMapper.writeValueAsString(response);
             idempotencyRecords.save(new IdempotencyRecord(UUID.randomUUID().toString(), actorId, key,
-                    requestHash, operation, objectMapper.writeValueAsString(response), Instant.now()));
+                    requestHash, operation, responseJson, Instant.now()));
+            idempotencyCache.putAfterCommit(actorId, key, requestHash, operation, responseJson);
         } catch (tools.jackson.core.JacksonException exception) {
             throw new IllegalStateException("Could not serialize operation response", exception);
         }

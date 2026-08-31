@@ -30,12 +30,14 @@ class BankingServiceTest {
     @Mock LedgerEntryRepository ledgerEntries;
     @Mock IdempotencyRecordRepository idempotencyRecords;
     @Mock OutboxEventRepository outboxEvents;
+    @Mock IdempotencyCache idempotencyCache;
 
     private BankingService service;
 
     @BeforeEach
     void setUp() {
-        service = new BankingService(accounts, ledgerEntries, idempotencyRecords, outboxEvents, new ObjectMapper());
+        service = new BankingService(accounts, ledgerEntries, idempotencyRecords, outboxEvents,
+                new ObjectMapper(), idempotencyCache);
     }
 
     @Test
