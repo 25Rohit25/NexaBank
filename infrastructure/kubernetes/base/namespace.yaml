@@ -4,4 +4,6 @@ metadata:
   name: nexa-bank
   labels:
     app.kubernetes.io/part-of: nexa-bank
-
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
