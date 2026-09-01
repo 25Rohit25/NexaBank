@@ -58,13 +58,12 @@ export function customerIdFromToken(token: string) {
 
 export async function apiRequest<T>(path: string, init: RequestInit = {}) {
   const token = getToken();
+  const headers = new Headers(init.headers);
+  if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+  if (token) headers.set('Authorization', `Bearer ${token}`);
   const response = await fetch(`${API_BASE}${path}`, {
     ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...init.headers,
-    },
+    headers,
   });
   if (!response.ok) {
     const detail = await response.text();

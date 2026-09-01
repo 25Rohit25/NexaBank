@@ -1,6 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import {
   Bot, Building2, LayoutDashboard, LogOut, ReceiptText,
   Send, Settings, ShieldCheck, WalletCards,
@@ -27,14 +28,14 @@ export function AppShell({ title, eyebrow, children }: { title: string; eyebrow:
   return (
     <main className="min-h-screen bg-background text-foreground lg:grid lg:grid-cols-[248px_minmax(0,1fr)]">
       <aside className="hidden border-r border-sidebar-border bg-sidebar px-5 py-6 lg:flex lg:flex-col">
-        <a href="/dashboard" className="flex items-center gap-3 px-2">
+        <Link href="/dashboard" className="flex items-center gap-3 px-2">
           <div className="grid size-10 place-items-center rounded-xl bg-primary text-primary-foreground"><Building2 className="size-5" /></div>
           <div><p className="font-heading text-lg font-semibold tracking-tight">Nexa Bank</p><p className="text-xs text-muted-foreground">Personal banking</p></div>
-        </a>
+        </Link>
         <nav className="mt-10 space-y-1" aria-label="Primary navigation">
           {navigation.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(`${href}/`);
-            return <a key={href} href={href} aria-current={active ? 'page' : undefined} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${active ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'}`}><Icon className="size-4" />{label}</a>;
+            return <Link key={href} href={href} aria-current={active ? 'page' : undefined} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${active ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'}`}><Icon className="size-4" />{label}</Link>;
           })}
         </nav>
         <div className="mt-auto space-y-3">

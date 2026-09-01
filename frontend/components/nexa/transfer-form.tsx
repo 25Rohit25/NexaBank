@@ -35,7 +35,7 @@ export function TransferForm() {
     </CardContent></Card>
     <Card className="bg-accent/50"><CardHeader><CardTitle>{preview ? 'Confirm transfer' : 'Confirmation required'}</CardTitle></CardHeader><CardContent>
       {preview ? <div className="space-y-4"><div className="rounded-xl bg-card p-4"><p className="text-xs text-muted-foreground">Amount</p><p className="mt-1 font-heading text-3xl font-semibold">{formatMoney(preview.amount)}</p><p className="mt-4 text-xs text-muted-foreground">{preview.source} → {preview.destination}</p></div><Button className="w-full" onClick={execute} disabled={pending}>{pending ? 'Verifying…' : 'Confirm and transfer'} <CheckCircle2 /></Button><Button variant="ghost" className="w-full" onClick={() => setPreview(null)}>Cancel</Button></div> : <div className="flex gap-3 text-sm leading-6 text-muted-foreground"><ShieldCheck className="mt-1 size-5 shrink-0 text-emerald-600" /> Nexa never moves money from the first request. Review the source, destination, and amount before explicitly confirming.</div>}
-      {status && <p role="status" className="mt-4 rounded-lg border bg-card p-3 text-sm">{status}</p>}
+      {status && <output className="mt-4 block rounded-lg border bg-card p-3 text-sm">{status}</output>}
     </CardContent></Card>
   </div>;
 }

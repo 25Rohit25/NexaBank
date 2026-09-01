@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import type { SyntheticEvent } from 'react';
 import { ArrowRight, Building2, ShieldCheck } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,7 @@ export function LoginForm() {
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
 
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
+  async function submit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault(); setPending(true); setError('');
     try {
       const result = await apiRequest<{ accessToken: string }>('/api/v1/auth/login', {
