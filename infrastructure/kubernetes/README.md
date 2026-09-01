@@ -2,6 +2,8 @@
 
 The manifests target the `nexa-bank` namespace and are assembled with Kustomize.
 
+Application images are published to GitHub Container Registry by the `Publish container images` workflow on version tags or a manual run. The Kubernetes base references the corresponding `latest` images; production releases should pin immutable commit-SHA tags in an environment overlay.
+
 Before applying them, create the runtime secret without committing credentials:
 
 ```bash
