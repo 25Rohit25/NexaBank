@@ -20,6 +20,8 @@ The gateway contains no banking rules. It validates JWT issuer/signature, permit
 
 The Agent Service derives identity and conversation scope from the verified JWT. Each chat request creates a short-lived MCP client carrying that caller's bearer token, discovers the banking tools, exposes them to Spring AI `ChatClient`, and closes the client after the model response. The same request passes through a policy-only RAG advisor backed by pgvector, so combined questions can use MCP for customer-specific live data and retrieved `bank_policy` evidence for general fees, limits, and eligibility. The answer must distinguish those two authorities. The model may select tools, but deterministic services retain authorization and money-movement authority. Redis-backed chat memory is keyed by the authenticated customer scope, limited to 20 messages, and expires after 30 minutes. It supports ordinary follow-ups without indefinitely retaining sensitive context; transfer execution still requires the MCP confirmation token and cannot bypass `prepareTransfer`.
 
+The agent treats user content, retrieved documents, and tool results as untrusted data rather than higher-priority instructions. Its prompt prohibits identity changes, authorization bypass, cross-customer disclosure, secret or full-account-number output, and unsupported success claims. These model-level controls supplement—not replace—the JWT and ownership enforcement in MCP and banking services.
+
 ## Remaining phases
 
-Live Ollama/MCP/pgvector/Redis smoke testing, AI safety evaluations, frontend, service container images, observability, and Kubernetes remain deferred.
+Live Ollama/MCP/pgvector/Redis smoke testing, AI evaluations, frontend, service container images, observability, and Kubernetes remain deferred.
