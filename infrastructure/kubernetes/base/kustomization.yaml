@@ -5,3 +5,5 @@ resources:
   - configmap.yaml
   - applications.yaml
   - platform.yaml
+  - autoscaling.yaml
+  - ingress.yaml
