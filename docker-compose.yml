@@ -78,6 +78,12 @@ services:
       <<: *bank-environment
       CUSTOMER_DATABASE_URL: jdbc:postgresql://postgres:5432/nexa_customer
     ports: ["8081:8081"]
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8081/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
     depends_on:
       postgres: {condition: service_healthy}
 
@@ -91,11 +97,17 @@ services:
       ACCOUNT_DATABASE_URL: jdbc:postgresql://postgres:5432/nexa_account
       CUSTOMER_SERVICE_URL: http://customer-service:8081
     ports: ["8082:8082"]
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8082/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
     depends_on:
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
       kafka: {condition: service_healthy}
-      customer-service: {condition: service_started}
+      customer-service: {condition: service_healthy}
 
   transaction-service:
     build:
@@ -106,6 +118,12 @@ services:
       <<: *bank-environment
       TRANSACTION_DATABASE_URL: jdbc:postgresql://postgres:5432/nexa_transaction
     ports: ["8083:8083"]
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8083/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
     depends_on:
       postgres: {condition: service_healthy}
       kafka: {condition: service_healthy}
@@ -117,6 +135,13 @@ services:
         MODULE: services/notification-service
     environment:
       <<: *bank-environment
+    ports: ["8084:8084"]
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8084/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
     depends_on:
       kafka: {condition: service_healthy}
 
@@ -128,6 +153,13 @@ services:
     environment:
       <<: *bank-environment
       AUDIT_DATABASE_URL: jdbc:postgresql://postgres:5432/nexa_audit
+    ports: ["8085:8085"]
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8085/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
     depends_on:
       postgres: {condition: service_healthy}
       kafka: {condition: service_healthy}
@@ -145,10 +177,16 @@ services:
       AGENT_SERVICE_URL: http://agent-service:8091
       BANKING_MCP_URL: http://banking-mcp-server:8090
     ports: ["8080:8080"]
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
     depends_on:
-      customer-service: {condition: service_started}
-      account-service: {condition: service_started}
-      transaction-service: {condition: service_started}
+      customer-service: {condition: service_healthy}
+      account-service: {condition: service_healthy}
+      transaction-service: {condition: service_healthy}
 
   banking-mcp-server:
     build:
@@ -159,15 +197,26 @@ services:
       <<: *bank-environment
       BANKING_GATEWAY_URL: http://api-gateway:8080
     ports: ["8090:8090"]
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8090/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
     depends_on:
       redis: {condition: service_healthy}
-      api-gateway: {condition: service_started}
+      api-gateway: {condition: service_healthy}
 
   ollama:
     image: ollama/ollama:0.11.10
     ports: ["11434:11434"]
     volumes:
       - ollama-data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
 
   agent-service:
     build:
@@ -183,11 +232,17 @@ services:
       OLLAMA_EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL:-mxbai-embed-large}
       RAG_INGEST_ON_STARTUP: ${RAG_INGEST_ON_STARTUP:-false}
     ports: ["8091:8091"]
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8091/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 45s
     depends_on:
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
-      banking-mcp-server: {condition: service_started}
-      ollama: {condition: service_started}
+      banking-mcp-server: {condition: service_healthy}
+      ollama: {condition: service_healthy}
 
   frontend:
     build:
@@ -200,8 +255,14 @@ services:
       NEXT_PUBLIC_NEXA_API_URL: ${NEXT_PUBLIC_NEXA_API_URL:-http://localhost:8080}
       NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
     ports: ["3000:3000"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
     depends_on:
-      api-gateway: {condition: service_started}
+      api-gateway: {condition: service_healthy}
 
 volumes:
   postgres-data:

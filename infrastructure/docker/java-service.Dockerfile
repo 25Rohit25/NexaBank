@@ -8,7 +8,10 @@ RUN mvn -B -pl "${MODULE}" -am -DskipTests package
 FROM eclipse-temurin:21-jre
 
 ARG MODULE
-RUN useradd --system --uid 10001 --create-home nexa
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --system --uid 10001 --create-home nexa
 WORKDIR /app
 COPY --from=build --chown=nexa:nexa /workspace/${MODULE}/target/*.jar /app/app.jar
 USER nexa
