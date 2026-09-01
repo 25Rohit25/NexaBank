@@ -1,4 +1,4 @@
-FROM node:22.14-bookworm-slim AS build
+FROM node:26.8-bookworm-slim AS build
 
 ARG NEXT_PUBLIC_NEXA_API_URL=http://localhost:8080
 ARG NEXT_PUBLIC_SITE_URL=http://localhost:3000
@@ -10,7 +10,7 @@ RUN npm ci
 COPY frontend/ ./
 RUN npm run build
 
-FROM node:22.14-bookworm-slim
+FROM node:26.8-bookworm-slim
 
 ENV NODE_ENV=production
 WORKDIR /app
