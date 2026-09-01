@@ -1,110 +1,146 @@
 # Nexa Bank
 
-Nexa Bank is being built backend-first. The deterministic banking backend is now implemented: identity, accounts, atomic money movement, durable ledger and outbox, Redis idempotency, Kafka projections, notifications, audit records, and a secured API gateway.
+Nexa Bank is a backend-first banking platform that combines deterministic Spring Boot services with a secured AI agent, MCP tools, policy RAG, a customer web application, and production engineering assets.
+
+The governing rule is simple: **the model chooses an intent; authenticated banking services decide whether the action is allowed and execute it.**
+
+## What is implemented
+
+- Customer registration/login with JWT and customer-scoped authorization
+- Savings/current accounts, balances, deposits, and atomic transfers
+- Persistent idempotency, ledger entries, and a transactional Kafka outbox
+- Kafka transaction projections, notifications, and durable audit records
+- API gateway routing, JWT validation, rate boundaries, and correlation IDs
+- Authenticated Streamable HTTP MCP tools with two-step transfer confirmation
+- Ollama-backed agent workflows, pgvector policy RAG, and Redis conversation memory
+- Deterministic AI safety/evaluation suite covering tools, grounding, authorization, and hallucination avoidance
+- Responsive React/Vinext customer application
+- Full Docker Compose topology with health checks
+- Prometheus metrics and a provisioned Grafana dashboard
+- Unit, security, MCP, RAG, agent, and Docker-aware PostgreSQL/Redis/Kafka integration tests
+- GitHub Actions CI, CodeQL, dependency review, Dependabot, and GHCR image publishing
+- Kubernetes workloads, persistence, probes, resource bounds, HPA, ingress, network policy, and external-secret integration
+
+## Architecture
+
+```text
+Browser → Frontend → API Gateway
+                       ├─ Customer Service → PostgreSQL
+                       ├─ Account Service  → PostgreSQL + Redis → Outbox → Kafka
+                       ├─ Transaction Service ← Kafka → PostgreSQL
+                       └─ Agent Service → MCP Server → Gateway → Banking services
+                              │
+                              ├─ Redis conversation memory
+                              ├─ pgvector policy retrieval
+                              └─ Ollama chat + embeddings
+
+Kafka → Notification Service
+      → Audit Service → PostgreSQL
+
+All HTTP services → Prometheus → Grafana
+```
+
+MCP is the live-data/action path. RAG is the policy-knowledge path. Neither path grants the model direct database access or authority to move money.
 
 ## Technology
 
-- Java 21
-- Spring Boot 4.1.1
-- Maven 3.6.3+
-- PostgreSQL 17 with pgvector available for a later RAG phase
-- Redis 8 and Kafka 4
-- Spring Cloud Gateway MVC 5.0.3
-- Spring AI 2.0.1 with Ollama and MCP
+- Java 21, Spring Boot 4.1.1, Spring AI 2.0.1, Maven
+- PostgreSQL 17 + pgvector, Redis 8, Kafka 4
+- Ollama, Streamable HTTP MCP
+- React 19, TypeScript, Tailwind CSS, shadcn/ui, Vinext
+- Docker Compose, Prometheus, Grafana, Kubernetes/Kustomize
+- JUnit 5, Mockito, Testcontainers, GitHub Actions, CodeQL
 
-## Repository
+## Repository map
 
 ```text
-services/customer-service  Customer profile, registration, login, JWT
-services/account-service   Savings/current accounts and balances
-services/transaction-service  Kafka-backed transaction history projection
-services/notification-service Structured transfer notification logs
-services/audit-service     Durable banking event audit records
-services/api-gateway       JWT validation, routing, correlation IDs
-mcp/banking-mcp-server     Secured Streamable HTTP banking tools
-ai/agent-service           JWT-scoped ChatClient, MCP/RAG, and expiring Redis memory
-ai/evals                   Golden agent cases and quantitative quality scorecard
-infrastructure/docker      Local database initialization
-docs                       Architecture and API contract
+services/                    Deterministic banking microservices and gateway
+mcp/banking-mcp-server/      Authenticated banking tools
+ai/agent-service/            Agent, MCP client, RAG, and conversation memory
+ai/evals/                    Golden cases and evaluation scorecards
+rag/documents/               Versioned banking policy knowledge
+frontend/                    Customer web application
+infrastructure/docker/       Container build and PostgreSQL initialization
+infrastructure/prometheus/   Metrics scraping
+infrastructure/grafana/      Provisioned datasource and dashboard
+infrastructure/kubernetes/   Base and production Kustomize manifests
+docs/                        Architecture, APIs, MCP tools, and security
+.github/                     CI, security analysis, releases, and dependency updates
 ```
 
-See [foundation architecture](docs/architecture.md) and [API reference](docs/api.md).
+See [architecture](docs/architecture.md), [API reference](docs/api.md), [MCP tools](docs/mcp-tools.md), and [security model](docs/security.md).
 
-## Prerequisites
+## Local quick start
 
-Install JDK 21, Maven, Git, and Docker Desktop. On Windows, verify them with:
+Requirements: Docker Desktop with its engine running. Java 21 and Maven are required only for host-side development.
 
-```powershell
-./scripts/check-prerequisites.ps1
-```
-
-## Start the banking backend
-
-1. Create local configuration:
+1. Create local configuration and replace the placeholder credentials:
 
    ```powershell
    Copy-Item .env.example .env
    ```
 
-   Replace the example values. `JWT_SECRET` must be at least 32 random bytes and identical for every HTTP service.
-
-2. Start PostgreSQL, Redis, and Kafka:
+2. Build and start the complete stack:
 
    ```powershell
-   docker compose up -d
+   docker compose up --build -d
    docker compose ps
    ```
 
-3. Run each service in its own terminal:
+3. Install the local models once:
 
    ```powershell
-   mvn -pl services/customer-service spring-boot:run
-   mvn -pl services/account-service spring-boot:run
-   mvn -pl services/transaction-service spring-boot:run
-   mvn -pl services/notification-service spring-boot:run
-   mvn -pl services/audit-service spring-boot:run
-   mvn -pl services/api-gateway spring-boot:run
-   mvn -pl mcp/banking-mcp-server spring-boot:run
-   mvn -pl ai/agent-service spring-boot:run
+   docker compose exec ollama ollama pull qwen3:8b
+   docker compose exec ollama ollama pull mxbai-embed-large
    ```
 
-   The agent defaults to Ollama at `http://localhost:11434` with `qwen3:8b`. Override `OLLAMA_BASE_URL` or `OLLAMA_CHAT_MODEL` in the environment when using a different local model. Its customer-scoped conversation memory uses Redis with a 30-minute TTL and a bounded 20-message window by default.
+4. Open the services:
 
-4. Verify gateway health:
+   - Customer app: http://localhost:3000
+   - API gateway: http://localhost:8080
+   - Prometheus: http://localhost:9090
+   - Grafana: http://localhost:3001
 
-   ```powershell
-   curl.exe http://localhost:8080/actuator/health
-   ```
-
-The PostgreSQL initialization script creates `nexa_customer`, `nexa_account`, `nexa_transaction`, and `nexa_audit`. An old PostgreSQL volume will not rerun initialization automatically.
-
-## End-to-end smoke test
-
-Register a customer:
-
-```powershell
-$registration = curl.exe -s -X POST http://localhost:8080/api/v1/auth/register `
-  -H 'Content-Type: application/json' `
-  -d '{"firstName":"Rohit","lastName":"Singh","email":"rohit@example.com","phone":"9876543210","password":"securePassword"}' | ConvertFrom-Json
-$token = $registration.accessToken
-```
-
-The JWT subject is the authoritative customer ID. Decode it locally or call the customer endpoint after obtaining the ID from the `sub` claim. Then create an account without sending any customer ID in the body:
-
-```powershell
-$account = curl.exe -s -X POST http://localhost:8080/api/v1/accounts `
-  -H "Authorization: Bearer $token" `
-  -H 'Content-Type: application/json' `
-  -d '{"accountType":"SAVINGS","currency":"INR"}' | ConvertFrom-Json
-
-curl.exe -s http://localhost:8080/api/v1/accounts/$($account.accountId)/balance `
-  -H "Authorization: Bearer $token"
-```
+The first PostgreSQL startup creates the customer, account, transaction, audit, and RAG databases. Existing volumes do not rerun initialization scripts.
 
 ## Build and test
 
 ```powershell
 mvn clean verify
+cd frontend
+npm ci
+npm run build
 ```
 
-The project targets Java 21. The secured MCP tool layer, policy RAG, combined MCP/RAG workflow, and expiring Redis conversation memory are implemented. Live agent verification requires the banking stack and Ollama. AI evaluations, frontend, container images, observability, and Kubernetes remain later phases.
+Integration tests use real PostgreSQL/pgvector, Redis, and Kafka containers when Docker is available. They skip cleanly on hosts without a Docker engine; CI runners execute them with Docker.
+
+## Core security behavior
+
+- JWT subject is the authoritative customer identity.
+- Services reject cross-customer account access even if a request body supplies another ID.
+- Transfers require an idempotency key and explicit confirmation before execution.
+- The agent cannot report success unless the deterministic tool returns success.
+- Policy answers must be grounded in retrieved documents; missing evidence produces an explicit unavailable answer.
+- Passwords, JWT secrets, provider keys, bearer tokens, and complete account numbers must never be committed or logged.
+
+Local placeholder defaults are development-only. Production Kubernetes uses the External Secrets Operator configuration documented in [docs/security.md](docs/security.md).
+
+## Kubernetes
+
+Render and inspect the complete base:
+
+```bash
+kubectl kustomize infrastructure/kubernetes/base
+```
+
+For production, first configure the External Secrets Operator and a `ClusterSecretStore` named `nexa-bank-secret-store`, then apply:
+
+```bash
+kubectl apply -k infrastructure/kubernetes/overlays/production
+```
+
+The image-release workflow publishes all application images to GHCR on a `v*` tag or manual dispatch. Production overlays should pin immutable commit-SHA image tags.
+
+## Delivery status
+
+Implementation is complete through the production-engineering phases. A live public rollout is intentionally environment-specific: it still requires a selected cluster/domain, registry visibility, external secret-store credentials, and an operator-approved deployment.
