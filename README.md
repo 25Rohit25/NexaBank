@@ -23,6 +23,7 @@ services/audit-service     Durable banking event audit records
 services/api-gateway       JWT validation, routing, correlation IDs
 mcp/banking-mcp-server     Secured Streamable HTTP banking tools
 ai/agent-service           JWT-scoped ChatClient, MCP/RAG, and expiring Redis memory
+ai/evals                   Golden agent cases and quantitative quality scorecard
 infrastructure/docker      Local database initialization
 docs                       Architecture and API contract
 ```

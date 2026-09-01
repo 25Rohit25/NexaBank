@@ -27,6 +27,7 @@
         <module>services/api-gateway</module>
         <module>mcp/banking-mcp-server</module>
         <module>ai/agent-service</module>
+        <module>ai/evals</module>
     </modules>
 
     <properties>
