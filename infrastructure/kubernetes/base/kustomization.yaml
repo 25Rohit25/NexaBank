@@ -4,3 +4,4 @@ resources:
   - namespace.yaml
   - configmap.yaml
   - applications.yaml
+  - platform.yaml
