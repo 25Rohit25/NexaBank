@@ -17,6 +17,8 @@ class AgentPromptFactoryTest {
                 .contains("explicitly confirmed")
                 .contains("Never invent banking data")
                 .contains("only retrieved bank_policy evidence")
+                .contains("use both the authenticated tools and retrieved policy evidence")
+                .contains("live data permits", "general policy permits")
                 .contains("I couldn't find this information in the available banking policies");
     }
 
