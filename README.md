@@ -22,7 +22,7 @@ services/notification-service Structured transfer notification logs
 services/audit-service     Durable banking event audit records
 services/api-gateway       JWT validation, routing, correlation IDs
 mcp/banking-mcp-server     Secured Streamable HTTP banking tools
-ai/agent-service           JWT-scoped ChatClient and authenticated MCP client
+ai/agent-service           JWT-scoped ChatClient, MCP/RAG, and expiring Redis memory
 infrastructure/docker      Local database initialization
 docs                       Architecture and API contract
 ```
@@ -67,7 +67,7 @@ Install JDK 21, Maven, Git, and Docker Desktop. On Windows, verify them with:
    mvn -pl ai/agent-service spring-boot:run
    ```
 
-   The agent defaults to Ollama at `http://localhost:11434` with `qwen3:8b`. Override `OLLAMA_BASE_URL` or `OLLAMA_CHAT_MODEL` in the environment when using a different local model.
+   The agent defaults to Ollama at `http://localhost:11434` with `qwen3:8b`. Override `OLLAMA_BASE_URL` or `OLLAMA_CHAT_MODEL` in the environment when using a different local model. Its customer-scoped conversation memory uses Redis with a 30-minute TTL and a bounded 20-message window by default.
 
 4. Verify gateway health:
 
@@ -106,4 +106,4 @@ curl.exe -s http://localhost:8080/api/v1/accounts/$($account.accountId)/balance 
 mvn clean verify
 ```
 
-The project targets Java 21. The secured MCP tool layer and the first authenticated agent workflow are implemented. Live agent verification requires the banking stack and Ollama. RAG, frontend, container images, observability, and Kubernetes remain later phases.
+The project targets Java 21. The secured MCP tool layer, policy RAG, combined MCP/RAG workflow, and expiring Redis conversation memory are implemented. Live agent verification requires the banking stack and Ollama. AI evaluations, frontend, container images, observability, and Kubernetes remain later phases.

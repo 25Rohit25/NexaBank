@@ -9,6 +9,16 @@ spring:
     username: ${POSTGRES_USER:nexa}
     password: ${POSTGRES_PASSWORD:nexa-local-only}
   ai:
+    chat:
+      memory:
+        repository:
+          redis:
+            host: ${REDIS_HOST:localhost}
+            port: ${REDIS_PORT:6379}
+            index-name: nexa-agent-chat-memory-idx
+            key-prefix: "nexa-agent:conversation:"
+            time-to-live: ${AGENT_MEMORY_TTL:30m}
+            initialize-schema: true
     mcp:
       client:
         enabled: false
@@ -37,6 +47,8 @@ banking:
   mcp-url: ${BANKING_MCP_URL:http://localhost:8090}
 
 nexa:
+  memory:
+    max-messages: ${AGENT_MEMORY_MAX_MESSAGES:20}
   rag:
     ingest-on-startup: ${RAG_INGEST_ON_STARTUP:false}
     top-k: ${RAG_TOP_K:4}
