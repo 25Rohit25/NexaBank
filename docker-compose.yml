@@ -189,6 +189,20 @@ services:
       banking-mcp-server: {condition: service_started}
       ollama: {condition: service_started}
 
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_NEXA_API_URL: ${NEXT_PUBLIC_NEXA_API_URL:-http://localhost:8080}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+    environment:
+      NEXT_PUBLIC_NEXA_API_URL: ${NEXT_PUBLIC_NEXA_API_URL:-http://localhost:8080}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+    ports: ["3000:3000"]
+    depends_on:
+      api-gateway: {condition: service_started}
+
 volumes:
   postgres-data:
   redis-data:
