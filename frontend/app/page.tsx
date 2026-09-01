@@ -13,10 +13,10 @@ import {
 import { Progress, ProgressLabel, ProgressValue } from '@/components/ui/progress';
 
 const navigation = [
-  { label: 'Overview', icon: LayoutDashboard, active: true },
-  { label: 'Accounts', icon: WalletCards },
-  { label: 'Transactions', icon: ReceiptText },
-  { label: 'Cards', icon: CreditCard },
+  { label: 'Overview', href: '/dashboard', icon: LayoutDashboard, active: true },
+  { label: 'Accounts', href: '/accounts', icon: WalletCards },
+  { label: 'Transactions', href: '/transactions', icon: ReceiptText },
+  { label: 'Cards', href: '/settings', icon: CreditCard },
 ];
 
 const transactions = [
@@ -40,10 +40,10 @@ export default function Home() {
         </div>
 
         <nav className="mt-10 space-y-1" aria-label="Primary navigation">
-          {navigation.map(({ label, icon: Icon, active }) => (
+          {navigation.map(({ label, href, icon: Icon, active }) => (
             <a
               key={label}
-              href="#"
+              href={href}
               aria-current={active ? 'page' : undefined}
               className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                 active
@@ -97,7 +97,7 @@ export default function Home() {
                   <p className="mt-2 font-heading text-4xl font-semibold tracking-[-0.04em] sm:text-5xl">₹1,24,850.00</p>
                   <p className="mt-3 text-sm text-primary-foreground/60">Across 2 active accounts</p>
                 </div>
-                <Button variant="secondary" size="lg"><Send data-icon="inline-start" /> Transfer money</Button>
+                <Button render={<a href="/transfers" />} variant="secondary" size="lg"><Send data-icon="inline-start" /> Transfer money</Button>
               </div>
               <div className="mt-8 grid gap-3 border-t border-white/10 pt-5 sm:grid-cols-3">
                 <div><p className="text-xs text-white/50">Money in this month</p><p className="mt-1 font-medium">₹92,500</p></div>
@@ -109,7 +109,7 @@ export default function Home() {
             <section aria-labelledby="accounts-heading">
               <div className="mb-3 flex items-end justify-between">
                 <div><p className="eyebrow">Your money</p><h1 id="accounts-heading" className="font-heading text-2xl font-semibold tracking-tight">Accounts</h1></div>
-                <Button variant="ghost" size="sm">View all <ChevronRight data-icon="inline-end" /></Button>
+                <Button render={<a href="/accounts" />} variant="ghost" size="sm">View all <ChevronRight data-icon="inline-end" /></Button>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <Card className="border-0 shadow-sm ring-border">
@@ -133,7 +133,7 @@ export default function Home() {
             </section>
 
             <Card className="border-0 shadow-sm ring-border">
-              <CardHeader><CardTitle>Recent activity</CardTitle><CardDescription>Latest movements across your accounts</CardDescription><CardAction><Button variant="outline" size="sm">All transactions</Button></CardAction></CardHeader>
+              <CardHeader><CardTitle>Recent activity</CardTitle><CardDescription>Latest movements across your accounts</CardDescription><CardAction><Button render={<a href="/transactions" />} variant="outline" size="sm">All transactions</Button></CardAction></CardHeader>
               <CardContent className="divide-y divide-border p-0">
                 {transactions.map(({ name, note, amount, icon: Icon }) => (
                   <div key={name} className="flex items-center gap-3 px-4 py-3.5">
@@ -153,8 +153,8 @@ export default function Home() {
                 <CardTitle>Ask Nexa</CardTitle><CardDescription>Your secure assistant can check live accounts and explain bank policies.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button variant="outline" className="h-auto w-full justify-between bg-card py-3 text-left whitespace-normal"><span>Can I transfer ₹50,000 internationally?</span><Bot className="size-4" /></Button>
-                <Button variant="outline" className="h-auto w-full justify-between bg-card py-3 text-left whitespace-normal"><span>Show transactions above ₹5,000</span><Bot className="size-4" /></Button>
+                <Button render={<a href="/ai-assistant" />} variant="outline" className="h-auto w-full justify-between bg-card py-3 text-left whitespace-normal"><span>Can I transfer ₹50,000 internationally?</span><Bot className="size-4" /></Button>
+                <Button render={<a href="/ai-assistant" />} variant="outline" className="h-auto w-full justify-between bg-card py-3 text-left whitespace-normal"><span>Show transactions above ₹5,000</span><Bot className="size-4" /></Button>
               </CardContent>
             </Card>
 
