@@ -24,6 +24,17 @@ export type Transaction = {
   correlationId: string;
 };
 
+export type Customer = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 const API_BASE = process.env.NEXT_PUBLIC_NEXA_API_URL ?? 'http://localhost:8080';
 const TOKEN_KEY = 'nexa_access_token';
 

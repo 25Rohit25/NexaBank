@@ -48,6 +48,12 @@ export function AppShell({ title, eyebrow, children }: { title: string; eyebrow:
           <div><p className="eyebrow">{eyebrow}</p><h1 className="font-heading text-xl font-semibold tracking-tight">{title}</h1></div>
           <div className="flex items-center gap-3"><Badge variant="outline" className="hidden border-emerald-200 bg-emerald-50 text-emerald-800 sm:inline-flex"><span className="size-1.5 rounded-full bg-emerald-500" /> Secure</Badge><Avatar size="lg"><AvatarFallback className="bg-primary text-primary-foreground">RS</AvatarFallback></Avatar></div>
         </header>
+        <nav className="flex gap-1 overflow-x-auto border-b border-border/70 px-3 py-2 lg:hidden" aria-label="Mobile navigation">
+          {navigation.map(({ href, label, icon: Icon }) => {
+            const active = pathname === href || pathname.startsWith(`${href}/`);
+            return <Link key={href} href={href} aria-current={active ? 'page' : undefined} className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium ${active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}><Icon className="size-4" />{label}</Link>;
+          })}
+        </nav>
         <div className="mx-auto max-w-[1240px] px-5 py-6 sm:px-8 xl:px-10 xl:py-8">{children}</div>
       </section>
     </main>
