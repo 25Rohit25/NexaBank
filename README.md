@@ -101,6 +101,14 @@ Requirements: Docker Desktop with its engine running. Java 21 and Maven are requ
    - Prometheus: http://localhost:9090
    - Grafana: http://localhost:3001
 
+5. Verify the running stack with a disposable customer and real API calls:
+
+   ```powershell
+   pwsh ./scripts/smoke-test.ps1
+   ```
+
+   Add `-IncludeAgent` after pulling the Ollama models to verify the authenticated agent path too. The smoke test checks account creation, deposits, transfers, idempotent replay, final balances, and the asynchronous Kafka transaction projection.
+
 The first PostgreSQL startup creates the customer, account, transaction, audit, and RAG databases. Existing volumes do not rerun initialization scripts.
 
 ## Build and test
