@@ -24,4 +24,4 @@ Registration requires a password of 12–72 characters. Phone numbers accept an 
 
 Deposit body: `{"amount":1000.00}`. Transfer body: `{"sourceAccountId":"...","destinationAccountId":"...","amount":25.00}`. Reusing an idempotency key with the same request replays its response; reuse with different request data returns `409 Conflict`.
 
-Agent chat body: `{"message":"What is my balance?"}`. The message is required and limited to 2,000 characters. The agent identity always comes from the verified JWT subject; the client cannot supply a customer ID. Banking answers require MCP tools, which are wired in the next agent increment.
+Agent chat body: `{"message":"What is my balance?"}`. The message is required and limited to 2,000 characters. The agent identity always comes from the verified JWT subject; the client cannot supply a customer ID. Live banking answers use authenticated MCP tools, while policy answers use retrieved pgvector evidence. Combined questions may use both paths in one response.

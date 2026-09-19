@@ -22,6 +22,12 @@ The Agent Service derives identity and conversation scope from the verified JWT.
 
 The agent treats user content, retrieved documents, and tool results as untrusted data rather than higher-priority instructions. Its prompt prohibits identity changes, authorization bypass, cross-customer disclosure, secret or full-account-number output, and unsupported success claims. These model-level controls supplement—not replace—the JWT and ownership enforcement in MCP and banking services.
 
-## Remaining phases
+## Delivery topology
 
-Live Ollama/MCP/pgvector/Redis smoke testing, AI evaluations, frontend, service container images, observability, and Kubernetes remain deferred.
+The complete local environment is defined in `docker-compose.yml`: all banking services, the gateway, MCP and agent services, frontend, PostgreSQL/pgvector, Redis, Kafka, Ollama, Prometheus, and Grafana. Every application container has a health check, and Prometheus scrapes each Spring service through `/actuator/prometheus`.
+
+Kubernetes manifests under `infrastructure/kubernetes` provide Deployments, Services, stateful platform workloads, persistent volumes, readiness/liveness probes, resource bounds, autoscaling, ingress, disruption budgets, network policy, and External Secrets integration. Application images are published to GHCR through the release workflow.
+
+## Verification
+
+The Maven reactor covers domain rules, authorization, idempotency, outbox publication, Kafka projections, MCP transport/tools, RAG ingestion/search, conversation memory, prompt safety, and deterministic AI evaluations. Docker-aware Testcontainers checks exercise PostgreSQL/pgvector, Redis, and Kafka when an engine is available. GitHub Actions also builds the frontend and every application image, validates Compose, and runs CodeQL for Java and TypeScript.
