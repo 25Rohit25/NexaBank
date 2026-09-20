@@ -17,3 +17,4 @@ target/
 **/target/
 *.log
 .DS_Store
+rendered-production.yaml

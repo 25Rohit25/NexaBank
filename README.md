@@ -68,7 +68,7 @@ docs/                        Architecture, APIs, MCP tools, and security
 .github/                     CI, security analysis, releases, and dependency updates
 ```
 
-See [architecture](docs/architecture.md), [API reference](docs/api.md), [database ownership](docs/database.md), [MCP tools](docs/mcp-tools.md), [AI evaluation](docs/ai-evaluation.md), [demo runbook](docs/demo.md), and [security model](docs/security.md).
+See [architecture](docs/architecture.md), [API reference](docs/api.md), [database ownership](docs/database.md), [MCP tools](docs/mcp-tools.md), [AI evaluation](docs/ai-evaluation.md), [demo runbook](docs/demo.md), [production deployment](docs/deployment.md), [résumé copy](docs/resume.md), and [security model](docs/security.md).
 
 ## Local quick start
 
@@ -148,6 +148,8 @@ kubectl apply -k infrastructure/kubernetes/overlays/production
 ```
 
 The image-release workflow publishes all application images to GHCR on a `v*` tag or manual dispatch. Production overlays should pin immutable commit-SHA image tags.
+
+Use the complete [production deployment runbook](docs/deployment.md) for image publication, secret provisioning, TLS/DNS preparation, rollout verification, smoke testing, and rollback.
 
 ## Delivery status
 
