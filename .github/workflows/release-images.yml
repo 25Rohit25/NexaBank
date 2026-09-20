@@ -37,6 +37,10 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Normalize image namespace
+        id: image
+        shell: bash
+        run: echo "namespace=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
       - uses: docker/build-push-action@v7
         with:
           context: .
@@ -44,8 +48,8 @@ jobs:
           build-args: MODULE=${{ matrix.module }}
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/nexabank-${{ matrix.name }}:${{ github.sha }}
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/nexabank-${{ matrix.name }}:latest
+            ${{ env.REGISTRY }}/${{ steps.image.outputs.namespace }}/nexabank-${{ matrix.name }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ steps.image.outputs.namespace }}/nexabank-${{ matrix.name }}:latest
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
 
@@ -60,13 +64,17 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Normalize image namespace
+        id: image
+        shell: bash
+        run: echo "namespace=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
       - uses: docker/build-push-action@v7
         with:
           context: .
           file: frontend/Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/nexabank-frontend:${{ github.sha }}
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/nexabank-frontend:latest
+            ${{ env.REGISTRY }}/${{ steps.image.outputs.namespace }}/nexabank-frontend:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ steps.image.outputs.namespace }}/nexabank-frontend:latest
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
