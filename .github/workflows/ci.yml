@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: azure/setup-kubectl@v4
+      - uses: azure/setup-kubectl@v5
       - name: Render base manifests
         run: kubectl kustomize infrastructure/kubernetes/base > /tmp/nexa-bank-base.yaml
       - name: Render production manifests
