@@ -68,7 +68,7 @@ docs/                        Architecture, APIs, MCP tools, and security
 .github/                     CI, security analysis, releases, and dependency updates
 ```
 
-See [architecture](docs/architecture.md), [API reference](docs/api.md), [MCP tools](docs/mcp-tools.md), and [security model](docs/security.md).
+See [architecture](docs/architecture.md), [API reference](docs/api.md), [database ownership](docs/database.md), [MCP tools](docs/mcp-tools.md), [AI evaluation](docs/ai-evaluation.md), [demo runbook](docs/demo.md), and [security model](docs/security.md).
 
 ## Local quick start
 
