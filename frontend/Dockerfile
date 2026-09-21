@@ -6,7 +6,7 @@ ENV NEXT_PUBLIC_NEXA_API_URL=${NEXT_PUBLIC_NEXA_API_URL}
 ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 WORKDIR /app
 COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm,sharing=locked npm ci
 COPY frontend/ ./
 RUN npm run build
 
