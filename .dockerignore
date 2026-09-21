@@ -4,9 +4,10 @@
 .vscode
 **/target
 **/node_modules
+.m2
+.m2-cache
 frontend/dist
 frontend/.vinext
 frontend/.open-next
 *.log
 .env
-
