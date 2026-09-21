@@ -3,7 +3,8 @@ FROM maven:3.9.11-eclipse-temurin-21 AS build
 ARG MODULE
 WORKDIR /workspace
 COPY . .
-RUN mvn -B -pl "${MODULE}" -am -DskipTests package
+RUN --mount=type=cache,target=/root/.m2,sharing=locked \
+    mvn -B -pl "${MODULE}" -am -DskipTests package
 
 FROM eclipse-temurin:21-jre
 
